@@ -1,4 +1,4 @@
-﻿namespace EventStore.Example
+﻿namespace NEventStore.Example
 {
     internal class SomeDomainEvent
     {

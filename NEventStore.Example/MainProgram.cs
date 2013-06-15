@@ -4,7 +4,6 @@ namespace NEventStore.Example
     using System.Transactions;
     using EventStore;
     using EventStore.Dispatcher;
-    using EventStore.Example;
     using EventStore.Persistence.SqlPersistence.SqlDialects;
 
     internal static class MainProgram
