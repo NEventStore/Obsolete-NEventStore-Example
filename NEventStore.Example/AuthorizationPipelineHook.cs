@@ -1,36 +1,22 @@
 namespace NEventStore.Example
 {
-    using System;
-    using EventStore;
-
-    public class AuthorizationPipelineHook : IPipelineHook
+    public class AuthorizationPipelineHook : PipelineHookBase
     {
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public Commit Select(Commit committed)
+        public override ICommit Select(ICommit committed)
         {
             // return null if the user isn't authorized to see this commit
             return committed;
         }
 
-        public bool PreCommit(Commit attempt)
-        {
-            // Can easily do logging or other such activities here
-            return true; // true == allow commit to continue, false = stop.
-        }
-
-        public void PostCommit(Commit committed)
+        public override void PostCommit(ICommit committed)
         {
             // anything to do after the commit has been persisted.
         }
 
-        protected virtual void Dispose(bool disposing)
+        public override bool PreCommit(CommitAttempt attempt)
         {
-            // no op
+            // Can easily do logging or other such activities here
+            return true; // true == allow commit to continue, false = stop.
         }
     }
 }

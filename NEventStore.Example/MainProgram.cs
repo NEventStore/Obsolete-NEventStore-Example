@@ -2,9 +2,9 @@ namespace NEventStore.Example
 {
     using System;
     using System.Transactions;
-    using EventStore;
-    using EventStore.Dispatcher;
-    using EventStore.Persistence.SqlPersistence.SqlDialects;
+    using NEventStore;
+    using NEventStore.Persistence.Sql.SqlDialects;
+    using NEventStore.Serialization.Json;
 
     internal static class MainProgram
     {
@@ -38,34 +38,16 @@ namespace NEventStore.Example
             return Wireup.Init()
                          .LogToOutputWindow()
                          .UsingInMemoryPersistence()
-                         .UsingSqlPersistence("EventStore") // Connection string is in app.config
+                         .UsingSqlPersistence("NEventStoreSql") // Connection string is in app.config
                          .WithDialect(new MsSqlDialect())
                          .EnlistInAmbientTransaction() // two-phase commit
                          .InitializeStorageEngine()
-                         .TrackPerformanceInstance("example")
+                         //.TrackPerformanceInstance("example") // uncomment to use performance tracking on full framework windows machines
                          .UsingJsonSerialization()
                          .Compress()
                          .EncryptWith(EncryptionKey)
                          .HookIntoPipelineUsing(new[] {new AuthorizationPipelineHook()})
-                         .UsingSynchronousDispatchScheduler()
-                         .DispatchTo(new DelegateMessageDispatcher(DispatchCommit))
                          .Build();
-        }
-
-        private static void DispatchCommit(Commit commit)
-        {
-            // This is where we'd hook into our messaging infrastructure, such as NServiceBus,
-            // MassTransit, WCF, or some other communications infrastructure.
-            // This can be a class as well--just implement IDispatchCommits.
-            try
-            {
-                foreach (EventMessage @event in commit.Events)
-                    Console.WriteLine(Resources.MessagesDispatched + ((SomeDomainEvent) @event.Body).Value);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine(Resources.UnableToDispatch);
-            }
         }
 
         private static void OpenOrCreateStream()
@@ -96,12 +78,12 @@ namespace NEventStore.Example
         private static void TakeSnapshot()
         {
             var memento = new AggregateMemento {Value = "snapshot"};
-            store.Advanced.AddSnapshot(new Snapshot(StreamId, 2, memento));
+            store.Advanced.AddSnapshot(new Snapshot(StreamId.ToString(), 2, memento));
         }
 
         private static void LoadFromSnapshotForwardAndAppend()
         {
-            Snapshot latestSnapshot = store.Advanced.GetSnapshot(StreamId, int.MaxValue);
+            ISnapshot latestSnapshot = store.Advanced.GetSnapshot(StreamId, int.MaxValue);
 
             using (IEventStream stream = store.OpenStream(latestSnapshot, int.MaxValue))
             {
